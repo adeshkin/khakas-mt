@@ -185,24 +185,6 @@ def evaluate(dev_corpus, tokenizer, model, batch_size, num_beams, langs):
     return eval_results
 
 
-def save_best_model(model, i, eval_results, best_results, langs_first_second, model_dir):
-    if (eval_results[langs_first_second]['chrf++'] >
-            best_results[langs_first_second]['chrf++']):
-        model_path = f"{model_dir}/best-{langs_first_second}"
-        model.save_pretrained(model_path)
-
-        print(
-            f"[Best] New best for {langs_first_second}: step {i}, chrf++ {eval_results[langs_first_second]['chrf++']:.2f}")
-        print(f"[*] Saved best model: {os.path.basename(model_path)}")
-
-        best_results[langs_first_second] = eval_results[langs_first_second]
-
-        with open(f'{model_path}-{i}-metrics.json', 'w') as f:
-            json.dump(best_results, f, indent=2)
-
-    return best_results
-
-
 def main():
     set_seed(19)
     train_corpus, dev_corpus, devtest_corpus = prepare_data()
@@ -244,7 +226,6 @@ def main():
     scaler = torch.amp.GradScaler(device='cuda', enabled=True)
     model.train()
     losses = []
-    best_results = None
     for i in trange(0, train_steps):
         xx, yy, src_lang, tgt_lang = get_batch_pairs(batch_size, train_corpus, langs)
         try:
@@ -293,16 +274,17 @@ def main():
             writer.add_scalar(f"train/loss_mean_last_{log_steps}", np.mean(losses[-log_steps:]), i)
             writer.add_scalar("train/lr", scheduler.get_last_lr()[0], i)
 
-            print(f"step {i}\nloss = {losses[-1]:.4f} | loss_mean_last_{log_steps} = {np.mean(losses[-log_steps:]):.4f}\n")
+            print(
+                f"step {i}\nloss = {losses[-1]:.4f} | loss_mean_last_{log_steps} = {np.mean(losses[-log_steps:]):.4f}\n")
 
         if i % eval_steps == 0 and i > 0:
             cleanup()
             model.eval()
-            last_model_path = f"{model_dir}/last"
+            last_model_path = f"{model_dir}/last-{i}"
             model.save_pretrained(last_model_path)
 
             eval_results = evaluate(dev_corpus, tokenizer, model, batch_size, num_beams, langs)
-            with open(f'{last_model_path}-{i}-metrics.json', 'w') as f:
+            with open(f'{last_model_path}-metrics.json', 'w') as f:
                 json.dump(eval_results, f, indent=2)
 
             langs_first_second = f'{langs[0]}-{langs[1]}'
@@ -313,12 +295,6 @@ def main():
             writer.add_scalar(f"eval/bleu_{langs_second_first}", eval_results[f'{langs_second_first}']['bleu'], i)
             writer.add_scalar(f"eval/chrf++_{langs_second_first}", eval_results[f'{langs_second_first}']['chrf++'], i)
             writer.flush()
-
-            if best_results is None:
-                best_results = eval_results
-
-            best_results = save_best_model(model, i, eval_results, best_results, langs_first_second, model_dir)
-            best_results = save_best_model(model, i, eval_results, best_results, langs_second_first, model_dir)
 
             eval_str = "\n".join([f"{k}: bleu = {v['bleu']:.1f}, chrf++ = {v['chrf++']:.1f}"
                                   for k, v in eval_results.items()])
