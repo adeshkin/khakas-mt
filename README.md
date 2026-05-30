@@ -1,255 +1,171 @@
-# 🌐 Khakas–Russian Machine Translation
+# Khakas-Russian Machine Translation (`khakas-mt`)
 
-A machine translation system for the **Khakas ↔ Russian** language pair, built by fine-tuning state-of-the-art pretrained translation models on a large-scale parallel corpus.
+This repository contains code, datasets information, and models for machine translation between the Khakas and Russian
+languages. We provide fine-tuning scripts and resulting models based on the **NLLB-200** and **Hy-MT2** architectures.
 
-## 📋 Overview
+## Training Data
 
-[Khakas](https://en.wikipedia.org/wiki/Khakas_language) (ISO 639-3: `kjh`) is a Turkic language spoken by approximately 40,000 people in the Republic of Khakassia, Russia. It is classified as a **severely endangered** language by UNESCO. This project aims to build a high-quality machine translation system for Khakas by leveraging modern NLP techniques.
+Our models were trained on a parallel corpus consisting of approximately **160,000 sentence pairs**. The datasets
+include:
 
-### Key Highlights
-
-- **~160,000 parallel sentence pairs** (Khakas–Russian) collected from multiple sources
-- **Two fine-tuning approaches**: encoder-decoder (NLLB-200) and decoder-only (Hy-MT2-1.8B with LoRA)
-- **Evaluation** on the [FLORES+](https://huggingface.co/datasets/openlanguagedata/flores_plus) benchmark using BLEU and chrF++ metrics
-
-## 🤗 Trained Models
-
-| Model | Architecture | HuggingFace Link |
-|-------|-------------|------------------|
-| NLLB-200-distilled-600M (fine-tuned) | Encoder-Decoder (Seq2Seq) | [adeshkin/nllb-200-distilled-600M-kjh-ru](https://huggingface.co/adeshkin/nllb-200-distilled-600M-kjh-ru) |
-| Hy-MT2-1.8B (LoRA fine-tuned) | Decoder-Only (Causal LM) | [adeshkin/Hy-MT2-1.8B-lora-kjh-ru](https://huggingface.co/adeshkin/Hy-MT2-1.8B-lora-kjh-ru) |
-
-## 📊 Data
-
-### Training Data
-
-The parallel corpus is assembled from the following sources:
-
-| Dataset | Description | Link |
-|---------|-------------|------|
-| Khakas–Russian Parallel Corpus | Core parallel corpus scraped and aligned from various Khakas-language sources | [adeshkin/khakas-russian-parallel-corpus](https://huggingface.co/datasets/adeshkin/khakas-russian-parallel-corpus) |
-| Google SMOL (document-level) | Document-level parallel data from the Google SMOL collection | [adeshkin/google-smol-en-ru-kjh](https://huggingface.co/datasets/adeshkin/google-smol-en-ru-kjh) (`smoldoc`) |
-| Google SMOL (sentence-level) | Sentence-level parallel data from the Google SMOL collection | [adeshkin/google-smol-en-ru-kjh](https://huggingface.co/datasets/adeshkin/google-smol-en-ru-kjh) (`smolsent`) |
-| Khakas Monolingual Sentences | Monolingual Khakas data used for tokenizer training | [adeshkin/kjh-mono-sents](https://huggingface.co/datasets/adeshkin/kjh-mono-sents) |
+- [adeshkin/khakas-russian-parallel-corpus](https://huggingface.co/datasets/adeshkin/khakas-russian-parallel-corpus) (159,213
+  pairs)
+- [adeshkin/google-smol-en-ru-kjh](https://huggingface.co/datasets/adeshkin/google-smol-en-ru-kjh) (1,688 pairs)
 
 **Data filtering:**
 - Minimum text length: ≥ 5 characters
 - Maximum sentence length: ≤ 64 words
 
-### Evaluation Data
+## Models
 
-- **FLORES+ dev** — validation split
-- **FLORES+ devtest** — test split
+We fine-tuned two different architectures for this task. The models are publicly available on Hugging Face:
 
-## 📏 Evaluation Results
+1. **[adeshkin/nllb-200-distilled-600M-kjh-ru](https://huggingface.co/adeshkin/nllb-200-distilled-600M-kjh-ru)**
+    - **Base model:** `facebook/nllb-200-distilled-600M`
+    - **Architecture:** Encoder-Decoder (Seq2Seq)
+    - **Fine-tuning:** Full fine-tuning after extending the tokenizer and embeddings to fully support Khakas Cyrillic
+      characters.
 
-Translation quality is evaluated on the **FLORES+ devtest** benchmark:
+2. **[adeshkin/Hy-MT2-1.8B-kjh-ru-lora](https://huggingface.co/adeshkin/Hy-MT2-1.8B-kjh-ru-lora)**
+    - **Base model:** `tencent/Hy-MT2-1.8B`
+    - **Architecture:** Decoder-Only (Causal LM)
+    - **Fine-tuning:** LoRA (Low-Rank Adaptation) on attention projections (weights merged into the base model).
 
-### NLLB-200-distilled-600M (fine-tuned)
+## Training Hyperparameters
 
-| Direction | BLEU | chrF++ |
-|-----------|------|--------|
-| kjh → rus | —    | —      |
-| rus → kjh | —    | —      |
+### NLLB-200-distilled-600M
 
-### Hy-MT2-1.8B (LoRA fine-tuned)
+- **Max sequence length**: 128
+- **Batch size**: 16 (per device) with 2 gradient accumulation steps
+- **Learning rate**: 1e-4
+- **Optimizer**: Adafactor
+- **LR scheduler**: Cosine with warmup
+- **Warmup steps**: 1,000
+- **Max steps**: 200,000
+- **Precision**: fp16 (autocast)
+- **Hardware**: 1x NVIDIA Tesla T4 (8GB VRAM, Google Colab)
+- **Training time**: ~10 hours
 
-| Direction | BLEU | chrF++ |
-|-----------|------|--------|
-| kjh → rus | —    | —      |
-| rus → kjh | —    | —      |
+### Hy-MT2-1.8B (LoRA)
 
-> **Note:** Fill in the metric values after evaluation is complete.
+- **LoRA rank**: 64
+- **LoRA alpha**: 128
+- **LoRA dropout**: 0.05
+- **Max sequence length**: 4096
+- **Batch size**: 2 (per device) with 16 gradient accumulation steps
+- **Learning rate**: 2e-4
+- **LR scheduler**: Cosine with minimum LR (1e-5)
+- **Warmup ratio**: 0.01
+- **Max steps**: 30,000
+- **Precision**: bf16
+- **Hardware**: 1x NVIDIA RTX 4060 Ti (8GB VRAM)
+- **Training time**: ~12 hours
 
-### Training Curves
+## Evaluation
 
-<!-- Add training metric plots here. Replace the path with the actual image file. -->
+Both models were evaluated on the **[FLORES+](https://huggingface.co/datasets/openlanguagedata/flores_plus) devtest**
+split (1,012 sentence pairs) using [SacreBLEU](https://github.com/mjpost/sacrebleu).
 
-![Training curves](assets/training_curves.png)
+| Model                       | Direction |      BLEU |    chrF++ |
+|-----------------------------|-----------|----------:|----------:|
+| **NLLB-200-distilled-600M** | kjh → ru  | **24.40** | **50.12** |
+|                             | ru → kjh  | **19.09** | **51.10** |
+| **Hy-MT2-1.8B (LoRA)**      | kjh → ru  |     21.09 |     46.18 |
+|                             | ru → kjh  |     16.82 |     48.86 |
 
-> **Note:** Place the training curves chart at `assets/training_curves.png`.
+FLORES+ dev split (997 sentences) was used for validation during training.
 
-## 🏗️ Architecture & Approaches
+![Metrics Report](assets/metrics_report.png)
 
-### 1. NLLB-200 (Seq2Seq)
+## Quick Start
 
-**Base model:** [`facebook/nllb-200-distilled-600M`](https://huggingface.co/facebook/nllb-200-distilled-600M)
+To reproduce the training process or run inference, follow these steps:
 
-The approach consists of:
-1. **Tokenizer expansion** — train a SentencePiece model on Khakas monolingual data ([adeshkin/kjh-mono-sents](https://huggingface.co/datasets/adeshkin/kjh-mono-sents)) and merge new subword tokens into the NLLB vocabulary
-2. **Add language token** `kjh_Cyrl` as a new special token
-3. **Embedding initialization** — initialize embeddings for the new language based on a closely related Turkic language (Kazakh `kaz_Cyrl`)
-4. **Bidirectional fine-tuning** — train on both directions (kjh→rus and rus→kjh) with a 60/40 sampling ratio
-
-**Training hyperparameters:**
-
-| Parameter | Value |
-|-----------|-------|
-| Optimizer | Adafactor (lr=1e-4) |
-| Scheduler | Cosine with warmup (1,000 steps) |
-| Precision | FP16 (mixed precision) |
-| Gradient accumulation | 2 steps |
-| Batch size | 16 |
-| Max sequence length | 128 tokens |
-| Total training steps | 200,000 |
-
-### 2. Hy-MT2-1.8B (Causal LM)
-
-**Base model:** [`tencent/Hy-MT2-1.8B`](https://huggingface.co/tencent/Hy-MT2-1.8B)
-
-The approach consists of:
-1. **Data formatting** — convert parallel data into instruction-following chat format (JSONL)
-2. **LoRA fine-tuning** — apply LoRA (rank=64, alpha=128) to attention modules (q, k, v, o projections)
-3. **Adapter merging** — merge LoRA adapters with the base model for efficient inference
-
-**Training hyperparameters:**
-
-| Parameter | Value |
-|-----------|-------|
-| Optimizer | AdamW (lr=2e-4) |
-| Scheduler | Cosine with min_lr=1e-5 |
-| Precision | BF16 |
-| Gradient accumulation | 16 steps |
-| Batch size | 2 |
-| Max sequence length | 4,096 tokens |
-| LoRA rank / alpha | 64 / 128 |
-| LoRA dropout | 0.05 |
-| Total training steps | 30,000 |
-
-## 📁 Project Structure
-
-```
-khakas-mt/
-├── nllb-200/                        # NLLB-200 approach
-│   ├── update_tokenizer.py          # Tokenizer expansion for Khakas
-│   ├── train.py                     # NLLB-200 training script
-│   └── test.py                      # Evaluation on FLORES+ devtest
-│
-├── hy-mt2/                          # Hy-MT2 approach
-│   ├── prepare_data.py              # Prepare data in chat format (JSONL)
-│   ├── train_dense.py               # Training script (full / LoRA fine-tuning)
-│   ├── train_dense.sh               # Launch full fine-tuning
-│   ├── train_dense_lora.sh          # Launch LoRA fine-tuning
-│   ├── merge_lora_weight.py         # Merge LoRA weights into base model
-│   ├── merge_lora_weight.sh         # Merge weights launch script
-│   ├── evaluate.py                  # Evaluate model on FLORES+
-│   ├── evaluate.sh                  # Batch evaluation across checkpoints
-│   └── test.py                      # Model testing
-│
-├── assets/                          # Charts and images
-│   └── training_curves.png          # Training metric plots
-├── requirements.txt                 # Python dependencies
-└── README.md
-```
-
-## 🚀 Installation & Usage
-
-### Requirements
-
-- Python 3.10+
-- CUDA-compatible GPU (24 GB+ VRAM recommended)
-
-### Install Dependencies
-
+1. Clone the repository:
 ```bash
 git clone https://github.com/adeshkin/khakas-mt.git
 cd khakas-mt
+```
+
+2. Create a virtual environment and install dependencies:
+```bash
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Environment Variables
+3. Set up your Hugging Face access tokens (e.g., via `huggingface-cli login` or a `.env` file) to download base models and datasets, and to push the trained models to the Hub.
 
-Create a `.env` file (used by `hy-mt2/evaluate.py`) or set environment variables:
-```bash
-READ_HF_TOKEN=<your_huggingface_token>
-```
+4. Navigate to the respective model's directory (`nllb-200/` or `hy-mt2/`) and run the data preparation and training scripts.
 
----
+> **Note for NLLB-200:** Before running `update_tokenizer.py`, ensure you install exactly `transformers==4.57.3`. You can upgrade back to the latest version for the actual training step (`train.py`).
 
-### NLLB-200 Pipeline
+## Repository Structure & Scripts
 
-#### Step 1: Update Tokenizer
+The repository is organized into folders per model architecture. Each folder contains the necessary scripts for data
+preparation, training, evaluation, and inference.
 
-> [!IMPORTANT]
-> The tokenizer update script (`nllb-200/update_tokenizer.py`) requires **`transformers==4.57.3`** for correct vocabulary expansion. The `NllbTokenizer` API for adding special tokens and manipulating the SentencePiece model changed in later versions, so you **must** use this specific version during the tokenizer update step.
+### `nllb-200/`
 
-```bash
-# Install the required version for tokenizer update
-pip install transformers==4.57.3 sacremoses==0.1.1 sentencepiece==0.2.1
+Scripts for preparing and training the NLLB-200 model:
 
-# Run the tokenizer expansion
-python nllb-200/update_tokenizer.py
-```
+- `update_tokenizer.py`: Extends the original NLLB tokenizer and embeddings to support missing Khakas characters. *(
+  Note: Requires exactly `transformers==4.57.3` due to internal tokenizer modifications)*.
+- `train.py`: Script for full fine-tuning.
+- `predict.py`: Inference script for translating text.
+- `test.py`: Evaluates the trained model on the devtest set.
+- `model_push_to_hub.py`: Script to push the fine-tuned model to the Hugging Face Hub.
 
-#### Step 2: Train the Model
+*The NLLB-200 training code is based on the article: [How to fine-tune an NLLB-200 model for translating a new language](https://cointegrated.medium.com/how-to-fine-tune-a-nllb-200-model-for-translating-a-new-language-a37fc706b865).*
 
-> [!NOTE]
-> After the tokenizer has been updated and saved, you can switch to a newer version of `transformers` (e.g., the one in `requirements.txt`) for training and inference.
+### `hy-mt2/`
 
-```bash
-# Install training dependencies
-pip install -r requirements.txt
+Scripts for preparing and training the Hy-MT2 model using LoRA:
 
-# Launch training
-python nllb-200/train.py
-```
+- `prepare_data.py`: Prepares the dataset by formatting it into instruction-following chat messages (JSONL).
+- `train_dense.py`: Main Python script for training Hy-MT2.
+- `train_dense_lora.sh`: Shell script wrapper to launch the LoRA training with optimal hyperparameters.
+- `merge_lora_weight.py` & `merge_lora_weight.sh`: Scripts to merge the trained LoRA weights back into the base model
+  for faster inference.
+- `predict.py`: Inference script for translating text.
+- `test.py`: Evaluates the model on the devtest set.
+- `model_push_to_hub.py`: Script to push the final model to the Hugging Face Hub.
 
-#### Step 3: Evaluate on FLORES+ devtest
+*The Hy-MT2 training code is based on the official repository: [Tencent-Hunyuan/Hy-MT2/tree/main/train](https://github.com/Tencent-Hunyuan/Hy-MT2/tree/main/train).*
 
-```bash
-python nllb-200/test.py
-```
 
----
+## Language Information
 
-### Hy-MT2 Pipeline
+* **ISO 639-3:** `kjh`
+* **ISO 15924:** `Cyrl`
+* **Glottocode:** `khak1248`
 
-#### Step 1: Prepare Training Data
+The Khakas language (Хакас тілі) is the ethnic language of the Khakas, the indigenous population of the
+Republic of Khakassia located in southern Siberia. It belongs to the Siberian subsubgroup of the Turkic language family.
+Khakas is the result of the historical consolidation of dialects. The Kachin and Sagai dialects were chosen as the base
+of the Khakas literary language based on the greater number of their native speakers. Until 1917, the scientific and
+official literature used the names the language of the Abakan or Minusinsk Tatars, the language of the Abakan or Yenisei
+Turks [Донидзе, 1997, p. 459]. The appearance of the name "Khakas tili" (Khakas language) is connected with the adoption
+in 1917 at the II Congress of the Khakas people on the initiative of S. D. Maynagashev decided to use the ethnonym "
+Khakasy", which is common to all. "The Congress unanimously decided to return to the people their ancient self–name -
+Khakasy. The resolutions of the 1918 Uyezd Congress of Soviets confirmed the popular decision" [Кызласов, 1994, p. 8].
 
-```bash
-python hy-mt2/prepare_data.py
-```
+N. A. Baskakov attributed the Khakas language to the Eastern Hunnic branch, the Uighur group, within which it, together
+with Kamasin, Chulym, Shorsky, Sary-Uighur and the northern dialects of the Altaic language, forms a special Khakas
+subgroup [Баскаков, 1975, p. 3].
 
-#### Step 2: LoRA Fine-Tuning
+According to the 2020 All-Russian Population Census, the total number of individuals who identified as ethnically Khakas
+in Russia is 61,365. Among them, just over 44% indicated the Khakas language as their mother tongue, which represents a
+14% decrease compared to the 2010 census (58%) [Borgoyakova, 2025, p. 46]. This trajectory aligns with the
+classification of Khakas as a “Definitely Endangered” language by UNESCO [Moseley, 2010]. Such a transition poses a
+significant threat to intergenerational language transfer and complicates the preservation of linguistic heritage.
 
-```bash
-cd hy-mt2 && bash train_dense_lora.sh
-```
+### References
 
-#### Step 3: Merge LoRA Weights
-
-```bash
-bash merge_lora_weight.sh
-```
-
-#### Step 4: Evaluate
-
-```bash
-python hy-mt2/evaluate.py --model_path <path_to_merged_model>
-```
-
-## 🛠️ Tech Stack
-
-- [Transformers](https://github.com/huggingface/transformers) — model loading, training, and inference
-- [PEFT](https://github.com/huggingface/peft) — parameter-efficient fine-tuning (LoRA)
-- [Datasets](https://github.com/huggingface/datasets) — data loading and preprocessing
-- [SacreBLEU](https://github.com/mjpost/sacrebleu) — BLEU and chrF++ evaluation metrics
-- [SentencePiece](https://github.com/google/sentencepiece) — subword tokenizer training
-- [PyTorch](https://pytorch.org/) — deep learning framework
-
-## 📄 License
-
-The script `hy-mt2/train_dense.py` is based on code from [Tencent HunYuan](https://github.com/Tencent-Hunyuan/HunyuanLLM) and is distributed under the Apache 2.0 License.
-
-## 📚 Citation
-
-If you use this work, please cite:
-
-```bibtex
-@misc{khakas-mt,
-  author       = {Adeshkin},
-  title        = {Khakas–Russian Machine Translation},
-  year         = {2025},
-  url          = {https://github.com/adeshkin/khakas-mt}
-}
-```
+1. Донидзе Г. И. Хакасский язык //Языки мира. Тюркские языки. – 1997. – С. 459.
+2. Кызласов Л. Р., Кызласов И. Л. Ключевые вопросы истории хакасов //Земля Сибирская (Страницы истории и современность):
+   сборник статей. Абакан–Москва: Эвтектика. – 1994.
+3. Баскаков Н. А. Грамматика хакасского языка. – Nauka, 1975. – №. 1.
+4. Borgoyakova T. G., Guseynova A. V. Ethnic and Linguistic Policy and Sociolinguistic Variability of Language Shift (
+   Example of Republic of Khakassia) //Humanities and social sciences. – 2025. – №. 3 (122). – С. 44-53.
+5. Moseley C. (ed.). Atlas of the World's Languages in Danger. – Unesco, 2010.

@@ -57,7 +57,7 @@ def main():
 
     random.shuffle(inputs)
 
-    with open('./experiments/khakas_russian_train_data.jsonl', 'w', encoding='utf-8') as f:
+    with open('../experiments/khakas_russian_train_data.jsonl', 'w', encoding='utf-8') as f:
         for entry in inputs:
             json.dump(entry, f)
             f.write('\n')

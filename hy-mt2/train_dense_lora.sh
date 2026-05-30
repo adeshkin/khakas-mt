@@ -4,7 +4,7 @@
 
 MODEL_SIZE="1.8B"
 model_path="tencent/Hy-MT2-1.8B"
-output_path="./experiments/hy-mt2-1.8b-kjh-ru-finetune"
+output_path="../experiments/hy-mt2-1.8b-kjh-ru-lora-finetune"
 HIDDEN_SIZE=2048
 INTERMEDIATE_SIZE=6144
 NUM_ATTENTION_HEADS=16
@@ -12,7 +12,7 @@ NUM_KEY_VALUE_HEADS=4
 NUM_LAYERS=32
 
 tokenizer_path=${model_path}
-train_data_file="./experiments/khakas_russian_train_data.jsonl"
+train_data_file="../experiments/khakas_russian_train_data.jsonl"
 
 # ============== Output & Logging ==============
 mkdir -p ${output_path}
