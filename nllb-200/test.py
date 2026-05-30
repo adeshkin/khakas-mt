@@ -86,18 +86,20 @@ def main():
     langs = ['kjh_Cyrl', 'rus_Cyrl']
 
     devtest_corpus = prepare_data_flores(split='devtest')
-
-    tokenizer = NllbTokenizer.from_pretrained('/content/drive/MyDrive/experiments/khakas-mt/tokenizer_kjh_Cyrl')
-    model_path = '/content/drive/MyDrive/experiments/khakas-mt/checkpoints/last'
-    model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
+    model_name = 'adeshkin/nllb-200-distilled-600M-kjh-ru'
+    tokenizer = NllbTokenizer.from_pretrained(model_name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
     model.cuda()
 
     eval_results = evaluate(devtest_corpus, tokenizer, model, batch_size, num_beams, langs)
-    with open(f'devtest-metrics.json', 'w') as f:
-        json.dump(eval_results, f, indent=2)
     eval_str = "\n".join([f"{k}: bleu = {v['bleu']:.1f}, chrf++ = {v['chrf++']:.1f}"
                           for k, v in eval_results.items()])
     print(eval_str)
+    print()
+    output_path = 'nllb-200_devtest_metrics.json'
+    with open(output_path, 'w') as f:
+        json.dump(eval_results, f, indent=2)
+    print(f"Metrics saved to {output_path}")
 
 
 if __name__ == '__main__':

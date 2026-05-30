@@ -57,16 +57,16 @@ def prepare_data_flores(split):
 
 
 def main():
-    tokenizer = AutoTokenizer.from_pretrained("tencent/Hy-MT2-1.8B", trust_remote_code=True)
-    model_path = './experiments/hy-mt2-1.8b-kjh-ru-finetune/checkpoint-24000_merged_hy_lora_weight'
+    model_name = 'adeshkin/Hy-MT2-1.8B-kjh-ru-lora'
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_path,
+        model_name,
         dtype=torch.bfloat16,
         device_map="auto",
         trust_remote_code=True,
     )
-    model.eval()
+    # model.eval()
     dev_corpus = prepare_data_flores('devtest')
     eval_results = {}
 
