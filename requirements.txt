@@ -4,3 +4,4 @@ peft==0.19.1
 datasets==4.8.5
 sacrebleu==2.6.0
 python-dotenv==1.2.2
+matplotlib==3.10.9

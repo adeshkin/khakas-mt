@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# based on https://github.com/Tencent-Hunyuan/Hy-MT2/blob/c30b36c59b19252dae7f3afca34d8478dbe67de9/train/deepspeed_support/train_dense_lora.sh
+
 MODEL_SIZE="1.8B"
 model_path="tencent/Hy-MT2-1.8B"
 output_path="./experiments/hy-mt2-1.8b-kjh-ru-finetune"

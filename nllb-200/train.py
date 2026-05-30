@@ -1,3 +1,5 @@
+# based on https://cointegrated.medium.com/how-to-fine-tune-a-nllb-200-model-for-translating-a-new-language-a37fc706b865
+
 from datasets import load_dataset
 import random
 from transformers import NllbTokenizer, AutoModelForSeq2SeqLM, get_cosine_schedule_with_warmup

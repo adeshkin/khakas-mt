@@ -1,3 +1,5 @@
+# based on https://github.com/Tencent-Hunyuan/Hy-MT2/blob/c30b36c59b19252dae7f3afca34d8478dbe67de9/train/deepspeed_support/merge_lora_weight.sh
+
 for i in {2000..22000..2000}
 do
     echo "Processing checkpoint-$i..."

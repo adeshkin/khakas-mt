@@ -8,7 +8,7 @@ load_dotenv()
 
 def main():
     tokenizer = AutoTokenizer.from_pretrained("tencent/Hy-MT2-1.8B", trust_remote_code=True)
-    model_path = '../experiments/hy-mt2-1.8b-kjh-ru-finetune/checkpoint-24000_merged_hy_lora_weight'
+    model_path = '../experiments/hy-mt2-1.8b-kjh-ru-lora-finetune/checkpoint-24000_merged_hy_lora_weight'
 
     model = AutoModelForCausalLM.from_pretrained(
         model_path,

@@ -1,3 +1,5 @@
+# based on https://github.com/Tencent-Hunyuan/Hy-MT2/blob/c30b36c59b19252dae7f3afca34d8478dbe67de9/train/deepspeed_support/train_dense.py
+
 # Copyright 2024 Tencent Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

@@ -1,4 +1,6 @@
-# pip install transformers==4.57.3 sacremoses==0.1.1 sentencepiece==0.2.1
+# based on https://cointegrated.medium.com/how-to-fine-tune-a-nllb-200-model-for-translating-a-new-language-a37fc706b865
+
+# pip install transformers==4.57.3
 
 import os
 import json
