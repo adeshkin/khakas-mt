@@ -14,6 +14,7 @@ def translate(model, tokenizer, text, src_lang, tgt_lang):
     prompt = f"Translate the following {src_lang} text into {tgt_lang}, output only the translation result without additional explanation:\n\n{text}"
     messages = [{"role": "user", "content": prompt}]
     inputs = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(model.device)
+    model.eval()
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
@@ -65,8 +66,9 @@ def main():
         dtype=torch.bfloat16,
         device_map="auto",
         trust_remote_code=True,
+        token=os.getenv('READ_HF_TOKEN')
     )
-    # model.eval()
+    
     dev_corpus = prepare_data_flores('devtest')
     eval_results = {}
 
