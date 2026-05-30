@@ -1,4 +1,4 @@
-# Khakas-Russian Machine Translation (`khakas-mt`)
+# Khakas-Russian Machine Translation
 
 This repository contains code, datasets information, and models for machine translation between the Khakas and Russian
 languages. We provide fine-tuning scripts and resulting models based on the **NLLB-200** and **Hy-MT2** architectures.
@@ -73,7 +73,7 @@ split (1,012 sentence pairs) using [SacreBLEU](https://github.com/mjpost/sacrebl
 | **Hy-MT2-1.8B (LoRA)**      | kjh → ru  |     21.09 |     46.18 |
 |                             | ru → kjh  |     16.82 |     48.86 |
 
-FLORES+ dev split (997 sentences) was used for validation during training.
+FLORES+ dev split (997 sentences) was used for validation during training. The plot below illustrates the evolution of the validation metrics. Note that the "Training Step" on the x-axis has been scaled so that both models are compared based on having seen the same number of training sentence pairs. The values at step zero represent the baseline zero-shot translation performance of these multilingual models prior to any fine-tuning.
 
 ![Metrics Report](assets/metrics_report.png)
 
