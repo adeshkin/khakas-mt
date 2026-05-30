@@ -8,11 +8,13 @@ languages. We provide fine-tuning scripts and resulting models based on the **NL
 Our models were trained on a parallel corpus consisting of approximately **160,000 sentence pairs**. The datasets
 include:
 
-- [adeshkin/khakas-russian-parallel-corpus](https://huggingface.co/datasets/adeshkin/khakas-russian-parallel-corpus) (159,213
+- [adeshkin/khakas-russian-parallel-corpus](https://huggingface.co/datasets/adeshkin/khakas-russian-parallel-corpus) (
+  159,213
   pairs)
 - [adeshkin/google-smol-en-ru-kjh](https://huggingface.co/datasets/adeshkin/google-smol-en-ru-kjh) (1,688 pairs)
 
 **Data filtering:**
+
 - Minimum text length: ≥ 5 characters
 - Maximum sentence length: ≤ 64 words
 
@@ -73,7 +75,10 @@ split (1,012 sentence pairs) using [SacreBLEU](https://github.com/mjpost/sacrebl
 | **Hy-MT2-1.8B (LoRA)**      | kjh → ru  |     21.09 |     46.18 |
 |                             | ru → kjh  |     16.82 |     48.86 |
 
-FLORES+ dev split (997 sentences) was used for validation during training. The plot below illustrates the evolution of the validation metrics. Note that the "Training Step" on the x-axis has been scaled so that both models are compared based on having seen the same number of training sentence pairs. The values at step zero represent the baseline zero-shot translation performance of these multilingual models prior to any fine-tuning.
+FLORES+ dev split (997 sentences) was used for validation during training. The plot below illustrates the evolution of
+the validation metrics. Note that the "Training Step" on the x-axis has been scaled so that both models are compared
+based on having seen the same number of training sentence pairs. The values at step zero represent the baseline
+zero-shot translation performance of these multilingual models prior to any fine-tuning.
 
 ![Metrics Report](assets/metrics_report.png)
 
@@ -82,23 +87,28 @@ FLORES+ dev split (997 sentences) was used for validation during training. The p
 To reproduce the training process or run inference, follow these steps:
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/adeshkin/khakas-mt.git
 cd khakas-mt
 ```
 
 2. Create a virtual environment and install dependencies:
+
 ```bash
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Set up your Hugging Face access tokens (e.g., via `huggingface-cli login` or a `.env` file) to download base models and datasets, and to push the trained models to the Hub.
+3. Set up your Hugging Face access tokens (e.g., via `huggingface-cli login` or a `.env` file) to download base models
+   and datasets, and to push the trained models to the Hub.
 
-4. Navigate to the respective model's directory (`nllb-200/` or `hy-mt2/`) and run the data preparation and training scripts.
+4. Navigate to the respective model's directory (`nllb-200/` or `hy-mt2/`) and run the data preparation and training
+   scripts.
 
-> **Note for NLLB-200:** Before running `update_tokenizer.py`, ensure you install exactly `transformers==4.57.3`. You can upgrade back to the latest version for the actual training step (`train.py`).
+> **Note for NLLB-200:** Before running `update_tokenizer.py`, ensure you install exactly `transformers==4.57.3`. You
+> can upgrade back to the latest version for the actual training step (`train.py`).
 
 ## Repository Structure & Scripts
 
@@ -109,14 +119,18 @@ preparation, training, evaluation, and inference.
 
 Scripts for preparing and training the NLLB-200 model:
 
-- `update_tokenizer.py`: Extends the original NLLB tokenizer and embeddings to support missing Khakas characters. *(
-  Note: Requires exactly `transformers==4.57.3` due to internal tokenizer modifications)*.
+- `update_tokenizer.py`: Extends the original NLLB tokenizer and embeddings to support missing Khakas characters.
+  Because the original NLLB tokenizer marked some Khakas characters as `<unk>` (unknown), the vocabulary was explicitly
+  extended. The script trains a new SentencePiece model on
+  the [adeshkin/kjh-mono-sents](https://huggingface.co/datasets/adeshkin/kjh-mono-sents) dataset to identify
+  missing tokens. *(Note: Requires exactly `transformers==4.57.3` due to internal tokenizer modifications)*.
 - `train.py`: Script for full fine-tuning.
 - `predict.py`: Inference script for translating text.
 - `test.py`: Evaluates the trained model on the devtest set.
 - `model_push_to_hub.py`: Script to push the fine-tuned model to the Hugging Face Hub.
 
-*The NLLB-200 training code is based on the article: [How to fine-tune an NLLB-200 model for translating a new language](https://cointegrated.medium.com/how-to-fine-tune-a-nllb-200-model-for-translating-a-new-language-a37fc706b865).*
+*The NLLB-200 training code is based on the
+article: [How to fine-tune an NLLB-200 model for translating a new language](https://cointegrated.medium.com/how-to-fine-tune-a-nllb-200-model-for-translating-a-new-language-a37fc706b865).*
 
 ### `hy-mt2/`
 
@@ -131,8 +145,8 @@ Scripts for preparing and training the Hy-MT2 model using LoRA:
 - `test.py`: Evaluates the model on the devtest set.
 - `model_push_to_hub.py`: Script to push the final model to the Hugging Face Hub.
 
-*The Hy-MT2 training code is based on the official repository: [Tencent-Hunyuan/Hy-MT2/tree/main/train](https://github.com/Tencent-Hunyuan/Hy-MT2/tree/main/train).*
-
+*The Hy-MT2 training code is based on the official
+repository: [Tencent-Hunyuan/Hy-MT2/tree/main/train](https://github.com/Tencent-Hunyuan/Hy-MT2/tree/main/train).*
 
 ## Language Information
 
