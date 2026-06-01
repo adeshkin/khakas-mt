@@ -1,4 +1,4 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 import torch
 
 model_name= "adeshkin/Hy-MT2-1.8B-kjh-ru-lora"
@@ -22,6 +22,7 @@ inputs = tokenizer.apply_chat_template(messages, add_generation_prompt=True, ret
 
 model.eval()
 with torch.no_grad():
+    set_seed(19)
     outputs = model.generate(
         **inputs,
         max_new_tokens=4096,
@@ -29,4 +30,4 @@ with torch.no_grad():
 
 result = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1]:], skip_special_tokens=True)
 print(result)
-# 54. Объясните значение пословицы "Чтобы научить коня, привязь твоя должна быть крепкой, чтобы народу говорить - твой рассказ был правдивым."
+# 54. Расскажите подробно значение пословицы "Чтобы выучить коня, у тебя должна быть крепкая веревка, чтобы говорить народу - твоя речь была правдивой."
